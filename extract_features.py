@@ -36,3 +36,18 @@ def split_data(data):
     classes = np.array(data["classes"], dtype=object)
     shuffle(features, classes)
     return train_test_split(features, classes, test_size=0.2, train_size=0.8, shuffle=False) # features_train, features_test, labels_train, labels_test
+
+# returns normalized data and the mean used to normalize (using mean normalization)
+def normalize(data):
+    mean = np.mean(data)
+    return np.subtract(data, mean), mean
+
+# returns the accuracy of knn over the GTANZ dataset for varying values of k
+def compute_accuracy(dataset_path):
+    k_vals = [5, 10, 20, 30]
+    data = preprocess(dataset_path)
+    for k in k_vals:
+        features_train, features_test, labels_train, labels_test = split_data(data)
+        features_train, mean = normalize(features_train)
+        features_test = np.subtract(features_test, mean) # use the same mean to normalize the test instances
+
