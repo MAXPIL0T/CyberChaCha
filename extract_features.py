@@ -32,7 +32,7 @@ def preprocess(dataset_path):
 
 # shuffles and splits data into training and test sets
 def split_data(data):
-    features = np.array(data["mfcc"])
-    classes = np.array(data["classes"])
+    features = np.array(data["mfcc"], dtype=object)
+    classes = np.array(data["classes"], dtype=object)
     shuffle(features, classes)
     return train_test_split(features, classes, test_size=0.2, train_size=0.8, shuffle=False) # features_train, features_test, labels_train, labels_test
