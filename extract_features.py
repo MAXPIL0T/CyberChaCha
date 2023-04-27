@@ -71,6 +71,13 @@ def get_flattened_frames(data):
     print("final frames length = " + str(len(frames)))
     return frames
 
+# trims all the given arrays to the size of the smallest array, returns the size of the smallest array
+def trim_arrays_to_min_length(arrays):
+    min_length = min([len(arr) for arr in arrays])
+    for i in range(len(arrays)):
+        arrays[i] = arrays[i][0:min_length]
+    return min_length
+
 # normalizes data in-place (also returns the scalers used on each frame in an array)
 def normalize(data, flattened_frames):
     scalers = []
