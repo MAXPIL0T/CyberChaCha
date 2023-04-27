@@ -57,18 +57,13 @@ def split_data(data):
 
 # returns an array with each entry being an array of all the values belonging to a particular frame
 def get_flattened_frames(data):
-    print("NOW IN GET_FLATTENED_FRAMES")
     num_frames = len(data[0])
-    print("num_frames = " + str(num_frames))
-    print("instances in data = " + str(len(data)))
-    print("frames in one instance = " + str(len(data[0])))
     frames = []
     for i in range(num_frames):
         print("i = " + str(i))
         frame_all = []
         frame_all = frame_all + [inst[i] for inst in data] # get the values from the correct frame in each instance
         frames.append(frame_all)
-    print("final frames length = " + str(len(frames)))
     return frames
 
 # trims all the given arrays to the size of the smallest array, returns the size of the smallest array
