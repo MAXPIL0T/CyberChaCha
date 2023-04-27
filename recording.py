@@ -13,7 +13,7 @@ ser = serial.Serial(PORT, BAUD_RATE)
 data = []
 # Recording start time
 start_time = time.time()
-# Until the time is over we record te audio
+# Until the time is over we record the audio
 while True:
     # Value read from serial [between 0 and 4095]
     value = ser.readline().strip().decode()
