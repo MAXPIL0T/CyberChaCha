@@ -1,4 +1,4 @@
 import extract_features
 
 if __name__ == '__main__':
-    pass
+    data = extract_features.load_data()
