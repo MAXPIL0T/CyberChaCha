@@ -8,5 +8,5 @@ def classify_audio(file_path):
     
     # process the given audio instance
     mfccs = extract_features.extract_mfcc(file_path)
-    preprocessed_instance = extract_features.preprocess_test_instance([mfccs.T], min_length)
+    preprocessed_instance = extract_features.preprocess_test_instance([mfccs.T], min_length, scale_vals)
     return model.predict(preprocessed_instance)[0]

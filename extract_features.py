@@ -38,7 +38,7 @@ def load_model():
     casted_labels = labels.astype(int) # cast labels as int
 
     # create the model using a custom comparison_metric (see below)
-    knn = KNeighborsClassifier(n_neighbors=28, metric=comparison_metric, metric_params={"dim_x": frame_num, "dim_y": coeff_num}, algorithm='brute')
+    knn = KNeighborsClassifier(n_neighbors=25, metric=comparison_metric, metric_params={"dim_x": frame_num, "dim_y": coeff_num}, algorithm='brute')
     knn.fit(reshaped_features, casted_labels) # train the model
     return (knn, scale_vals, min_length)
 
@@ -53,11 +53,13 @@ def comparison_metric(inst1, inst2, dim_x, dim_y):
     return np.average(distances_between_each_frame) # "distance" between two instances is the average distance between their frames
 
 # Trims and pads a given array of test instances to the specified length
-def preprocess_test_instance(test_features, length):
+def preprocess_test_instance(test_features, length, scale_vals):
     util.trim_arrays_to_length(test_features, length)
+    # test_features = np.array(test_features)
+    normalize_with_scale_vals(test_features, scale_vals)
     test_features = util.pad_arrays_with_zeros(test_features, length)
-    test_features = np.array(test_features)
     # reshape
+    test_features = np.array(test_features)
     ninstances, frame_num, coeff_num = test_features.shape
     reshaped_test_features = test_features.reshape((ninstances, frame_num * coeff_num))
     return reshaped_test_features
