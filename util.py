@@ -34,3 +34,6 @@ def pad_arrays_with_zeros(arrays, end_length):
             zero_arrs = np.zeros((end_length - len(arrays[i]), 13))
             arrays[i] = np.concatenate((np.array(arrays[i]), zero_arrs), axis=0)
     return arrays
+
+def get_random_elem(arr):
+    return np.random.choice(arr)
