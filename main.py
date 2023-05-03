@@ -1,7 +1,5 @@
 import extract_features
+import audio_classify
 
 if __name__ == '__main__':
-    data = extract_features.load_data()
-    features_train, features_test, labels_train, labels_test = extract_features.split_data(data)
-    min_length = extract_features.trim_arrays_to_min_length(features_train)
-    extract_features.get_flattened_frames(features_train)
+    print(audio_classify.classify_audio("Data\genres_original\pop\pop.00011.wav"))

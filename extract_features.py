@@ -3,19 +3,107 @@
 import librosa
 import os
 import pickle
+import util
 import numpy as np
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
-# import matplotlib.pyplot as plt
 
+# ------------------------ USEFUL FOR PROJECT --------------------------
 # returns a matrix of mel frequency cepstral coefficients (13 rows, one for each coefficient vs columns for frames)
 def extract_mfcc(file_name):
     signal, sample_rate = librosa.load(file_name)
     mfccs = librosa.feature.mfcc(signal, n_mfcc=13, sr=sample_rate)
     return mfccs
+
+# Loads a knn model for the GTANZ dataset
+def load_model():
+    # load the normalized data and various relevant info
+    loaded_data = []
+    with open("normalized_data.dat", "rb") as f:
+        while True:
+            try:
+                loaded_data.append(pickle.load(f))
+            except EOFError:
+                break
+    features = np.array(loaded_data[0]) # all the features of every instance in the dataset
+    labels = np.array(loaded_data[1]) # corresponding labels
+    scale_vals = loaded_data[2] # values used to normalize the dataset instances
+    min_length = loaded_data[3] # minimum length of the instances in the dataset (i.e min number of frames)
+
+    # reshape into 2D array so we can use sklearn's knn
+    ninstances, frame_num, coeff_num = features.shape
+    reshaped_features = features.reshape((ninstances, frame_num * coeff_num))
+    casted_labels = labels.astype(int) # cast labels as int
+
+    # create the model using a custom comparison_metric (see below)
+    knn = KNeighborsClassifier(n_neighbors=5, metric=comparison_metric, metric_params={"dim_x": frame_num, "dim_y": coeff_num})
+    knn.fit(reshaped_features, casted_labels) # train the model
+    return (knn, scale_vals, min_length)
+
+# comparison metric used to calculate distance between two instance
+    # inst1 and inst2 are both arrays of vectors, where each vector is a frame
+    # each instance is then reshaped into dim_x by dim_y array (frame number by coefficients number)
+def comparison_metric(inst1, inst2, dim_x, dim_y):
+    # reshape the instances into 2D arrays
+    inst1 = util.reshape_1D_to_2D(inst1, dim_x, dim_y)
+    inst2 = util.reshape_1D_to_2D(inst2, dim_x, dim_y)
+    distances_between_each_frame = [np.linalg.norm(frame1 - frame2) for frame1, frame2 in zip(inst1, inst2)]
+    return np.average(distances_between_each_frame) # "distance" between two instances is the average distance between their frames
+
+# Trims and pads a given array of test instances to the specified length
+def preprocess_test_instance(test_features, length):
+    util.trim_arrays_to_length(test_features, length)
+    test_features = util.pad_arrays_with_zeros(test_features, length)
+    test_features = np.array(test_features)
+    # reshape
+    ninstances, frame_num, coeff_num = test_features.shape
+    reshaped_test_features = test_features.reshape((ninstances, frame_num * coeff_num))
+    return reshaped_test_features
+
+# ------------------------ NORMALIZATION AND LOADING DATA --------------------------
+# normalizes data in-place (also returns the scale values used on each frame in an array)
+def normalize(data, flattened_frames):
+    scale_vals = []
+    for i in range(len(flattened_frames)):
+        mean = np.mean(flattened_frames[i])
+        std_dev = np.std(flattened_frames[i])
+        scale_vals.append((mean, std_dev))
+    return normalize_with_scale_vals(data, scale_vals)
+
+# normalizes data in-place (also returns the scalers used on each frame in an array)
+def normalize_with_scale_vals(data, scale_vals):
+    for i in range(len(data[0])): # for each frame
+        mean = scale_vals[i][0]
+        std = scale_vals[i][1]
+        for j in range(len(data)): # for each instance
+            frame = data[j][i]
+            data[j][i] = transform(mean, std, data[j][i]) # normalize the data
+    return scale_vals
+
+# transforms arr by using mean normalization with the given mean and std
+def transform(mean, std, arr):
+    return np.divide(np.subtract(arr, mean), std)
+
+# Loads data from binary file (all raw mfccs data) and returns it
+def load_data():
+    loaded_data = []
+    with open("all_mfcc.dat", "rb") as f:
+        while True:
+            try:
+                loaded_data.append(pickle.load(f))
+            except EOFError:
+                break
+    return {"mfcc": loaded_data[:-1], "classes": loaded_data[-1]}
+
+# ------------------------ OLD (USED WHEN WRITING THIS CODE) -------------------------- (not needed anymore but keep it just in case)
+# shuffles and splits data into training and test sets
+def split_data(data):
+    features = np.array(data["mfcc"], dtype=object)
+    classes = np.array(data["classes"], dtype=object)
+    shuffle(features, classes)
+    return train_test_split(features, classes, test_size=0.2, train_size=0.8, shuffle=False) # features_train, features_test, labels_train, labels_test
 
 # returns data as mfcc and classes (also dumps mfccs into a binary file)
 def preprocess(dataset_path):
@@ -37,80 +125,16 @@ def preprocess(dataset_path):
     pickle.dump(data["classes"], f) # store the classes
     return data
 
-# Loads data from binary file and returns it
-def load_data():
-    loaded_data = []
-    with open("all_mfcc.dat", "rb") as f:
-        while True:
-            try:
-                loaded_data.append(pickle.load(f))
-            except EOFError:
-                break
-    return {"mfcc": loaded_data[:-1], "classes": loaded_data[-1]}
+# stores pre-trained model
+def preprocess_model():
+    data = load_data()
+    min_length = util.trim_arrays_to_min_length(data["mfcc"])
+    features = data["mfcc"]
+    labels = data["classes"]
+    scale_vals = normalize(features, util.get_flattened_frames(features)) # the scale vals (mean and variance fits) are used to normalize the training data
 
-# shuffles and splits data into training and test sets
-def split_data(data):
-    features = np.array(data["mfcc"], dtype=object)
-    classes = np.array(data["classes"], dtype=object)
-    shuffle(features, classes)
-    return train_test_split(features, classes, test_size=0.2, train_size=0.8, shuffle=False) # features_train, features_test, labels_train, labels_test
-
-# returns an array with each entry being an array of all the values belonging to a particular frame
-def get_flattened_frames(data):
-    num_frames = len(data[0])
-    frames = []
-    for i in range(num_frames):
-        print("i = " + str(i))
-        frame_all = []
-        frame_all = frame_all + [inst[i] for inst in data] # get the values from the correct frame in each instance
-        frames.append(frame_all)
-    return frames
-
-# trims all the given arrays to the size of the smallest array, returns the size of the smallest array
-def trim_arrays_to_min_length(arrays):
-    min_length = min([len(arr) for arr in arrays])
-    for i in range(len(arrays)):
-        arrays[i] = arrays[i][0:min_length]
-    return min_length
-
-# normalizes data in-place (also returns the scalers used on each frame in an array)
-def normalize(data, flattened_frames):
-    scalers = []
-    for i in range(len(flattened_frames)):
-        scaler = StandardScaler()
-        scaler.fit(flattened_frames[i])
-        scalers.append(scaler)
-    return normalize_with_scalers(data, scalers)
-
-# normalizes data in-place (also returns the scalers used on each frame in an array)
-def normalize_with_scalers(data, scalers):
-    for i in range(len(data[0])): # for each frame
-        for j in range(len(data)): # for each instance
-            frame = data[j][i]
-            data[j][i] = scaler[i].transform(frame) # normalize the data
-    return scalers
-
-# comparison metric used to calculate distance between two instance
-# inst1 and inst2 are both arrays of vectors, where each vector is a frame
-def comparison_metric(inst1, inst2):
-    distances_between_each_frame = [np.linalg.norm(frame1 - frame2) for frame1, frame2 in zip(inst1, inst2)]
-    return np.average(distances_between_each_frame)
-
-# returns the accuracy of knn over the GTANZ dataset for varying values of k
-def compute_accuracy(dataset_path):
-    k_vals = [5]
-    accuracy_vals = []
-    data = preprocess(dataset_path)
-    for k in k_vals:
-        knn = KNeighborsClassifier(n_neighbors=k, metric=comparison_metric)
-        features_train, features_test, labels_train, labels_test = split_data(data)
-        scalers = normalize(features_train, get_flattened_frames(features_train)) # the scalers (mean and variance fits) used to normalize the training data
-        normalize_with_scalers(features_test, scalers) # normalize the testing instances with the same scalers
-
-        knn.fit(features_train, labels_train) # train the model
-
-        # compute accuracy
-        predictions = knn.predict(features_test)
-        accuracy = accuracy_score(labels_test, predictions)
-        accuracy_vals.append(accuracy)
-    return (k_vals, accuracy_vals)
+    f = open("normalized_data.dat", "wb")
+    pickle.dump(features, f)
+    pickle.dump(labels, f)
+    pickle.dump(scale_vals, f)
+    pickle.dump(min_length, f)
