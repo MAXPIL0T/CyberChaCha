@@ -11,7 +11,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 
 # ------------------------ USEFUL FOR PROJECT --------------------------
-# returns a matrix of mel frequency cepstral coefficients (13 rows, one for each coefficient vs columns for frames)
+# Returns a matrix of mel frequency cepstral coefficients (13 rows, one for each coefficient vs columns for frames)
 def extract_mfcc(file_name):
     signal, sample_rate = librosa.load(file_name)
     mfccs = librosa.feature.mfcc(signal, n_mfcc=13, sr=sample_rate)
@@ -38,11 +38,11 @@ def load_model():
     casted_labels = labels.astype(int) # cast labels as int
 
     # create the model using a custom comparison_metric (see below)
-    knn = KNeighborsClassifier(n_neighbors=25, metric=comparison_metric, metric_params={"dim_x": frame_num, "dim_y": coeff_num}, algorithm='brute')
+    knn = KNeighborsClassifier(n_neighbors=28, metric=comparison_metric, metric_params={"dim_x": frame_num, "dim_y": coeff_num}, algorithm='brute')
     knn.fit(reshaped_features, casted_labels) # train the model
     return (knn, scale_vals, min_length)
 
-# comparison metric used to calculate distance between two instance
+# Comparison metric used to calculate distance between two instance
     # inst1 and inst2 are both arrays of vectors, where each vector is a frame
     # each instance is then reshaped into dim_x by dim_y array (frame number by coefficients number)
 def comparison_metric(inst1, inst2, dim_x, dim_y):
@@ -65,7 +65,7 @@ def preprocess_test_instance(test_features, length, scale_vals):
     return reshaped_test_features
 
 # ------------------------ NORMALIZATION AND LOADING DATA --------------------------
-# normalizes data in-place (also returns the scale values used on each frame in an array)
+# Normalizes data in-place (also returns the scale values used on each frame in an array)
 def normalize(data, flattened_frames):
     scale_vals = []
     for i in range(len(flattened_frames)):
@@ -74,7 +74,7 @@ def normalize(data, flattened_frames):
         scale_vals.append((mean, std_dev))
     return normalize_with_scale_vals(data, scale_vals)
 
-# normalizes data in-place (also returns the scalers used on each frame in an array)
+# Normalizes data in-place (also returns the scalers used on each frame in an array)
 def normalize_with_scale_vals(data, scale_vals):
     for i in range(len(data[0])): # for each frame
         mean = scale_vals[i][0]
@@ -84,7 +84,7 @@ def normalize_with_scale_vals(data, scale_vals):
             data[j][i] = transform(mean, std, data[j][i]) # normalize the data
     return scale_vals
 
-# transforms arr by using mean normalization with the given mean and std
+# Transforms arr by using mean normalization with the given mean and std
 def transform(mean, std, arr):
     return np.divide(np.subtract(arr, mean), std)
 
@@ -100,14 +100,14 @@ def load_data():
     return {"mfcc": loaded_data[:-1], "classes": loaded_data[-1]}
 
 # ------------------------ OLD (USED WHEN WRITING THIS CODE) -------------------------- (not needed anymore but keep it just in case)
-# shuffles and splits data into training and test sets
+# Shuffles and splits data into training and test sets
 def split_data(data):
     features = np.array(data["mfcc"], dtype=object)
     classes = np.array(data["classes"], dtype=object)
     shuffle(features, classes)
     return train_test_split(features, classes, test_size=0.2, train_size=0.8, shuffle=False) # features_train, features_test, labels_train, labels_test
 
-# returns data as mfcc and classes (also dumps mfccs into a binary file)
+# Returns data as mfcc and classes (also dumps mfccs into a binary file)
 def preprocess(dataset_path):
     f = open("all_mfcc.dat", "wb")
     data = {"mfcc": [], "classes": []}
@@ -127,7 +127,7 @@ def preprocess(dataset_path):
     pickle.dump(data["classes"], f) # store the classes
     return data
 
-# stores pre-trained model
+# Stores pre-trained model
 def preprocess_model():
     data = load_data()
     min_length = util.trim_arrays_to_min_length(data["mfcc"])
@@ -141,6 +141,7 @@ def preprocess_model():
     pickle.dump(scale_vals, f)
     pickle.dump(min_length, f)
 
+# Compute distance between two audio files given by the file paths
 def distance(path1, path2):
     features1 = np.array([extract_mfcc(path1).T])
     features2 = np.array([extract_mfcc(path2).T])
