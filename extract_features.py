@@ -38,7 +38,7 @@ def load_model():
     casted_labels = labels.astype(int) # cast labels as int
 
     # create the model using a custom comparison_metric (see below)
-    knn = KNeighborsClassifier(n_neighbors=5, metric=comparison_metric, metric_params={"dim_x": frame_num, "dim_y": coeff_num})
+    knn = KNeighborsClassifier(n_neighbors=28, metric=comparison_metric, metric_params={"dim_x": frame_num, "dim_y": coeff_num}, algorithm='brute')
     knn.fit(reshaped_features, casted_labels) # train the model
     return (knn, scale_vals, min_length)
 
@@ -138,3 +138,22 @@ def preprocess_model():
     pickle.dump(labels, f)
     pickle.dump(scale_vals, f)
     pickle.dump(min_length, f)
+
+def distance(path1, path2):
+    features1 = np.array([extract_mfcc(path1).T])
+    features2 = np.array([extract_mfcc(path2).T])
+
+    # trim, normalize, pad
+    min_length = util.trim_arrays_to_min_length(features1)
+    scale_vals = normalize(features1, util.get_flattened_frames(features1))
+    normalize_with_scale_vals(features2, scale_vals)
+    util.trim_arrays_to_length(features2, min_length)
+    features2 = util.pad_arrays_with_zeros(features2, min_length)
+
+    # reshape
+    ninstances1, frame_num1, coeff_num1 = features1.shape
+    reshaped1 = features1.reshape((ninstances1, frame_num1 * coeff_num1))
+    ninstances2, frame_num2, coeff_num2 = features2.shape
+    reshaped2 = features2.reshape((ninstances2, frame_num2 * coeff_num2))
+
+    return comparison_metric(reshaped1, reshaped2, frame_num1, coeff_num1)
