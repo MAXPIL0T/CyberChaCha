@@ -5,7 +5,7 @@ import serial
 from scipy.io import wavfile
 
 PORT = '/dev/cu.usbserial-10'
-BAUD_RATE = 230400
+BAUD_RATE = 650000
 DURATION = 1
 COUNT = 1
 
