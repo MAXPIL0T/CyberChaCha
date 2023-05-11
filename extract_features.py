@@ -17,7 +17,7 @@ from sklearn.metrics import accuracy_score
 def extract_mfcc(file_name):
     signal, sample_rate = librosa.load(file_name)
     # truncate to 10 seconds
-    # signal = signal[:int(10 * sample_rate)]
+    signal = signal[:int(10 * sample_rate)]
     mfccs = librosa.feature.mfcc(signal, n_mfcc=13, sr=sample_rate)
     return mfccs
 

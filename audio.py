@@ -2,8 +2,9 @@ import serial
 import numpy as np
 from scipy.io import wavfile
 import time
+import audio_tools
 
-PORT = 'COM6'
+PORT = 'COM5'
 BAUD_RATE = 650000
 # Duration of individual sample in seconds
 INDIVIDUAL_SAMPLE_DURATION = 1
@@ -20,15 +21,16 @@ def create_wav(data):
     # Transform deep_copy to numpy array
     deep_copy = np.array(deep_copy)
     # Normalize deep_copy data to be between -1 and 1 for WAV file spec, then scale for int16
-    deep_copy = 32767 * ((deep_copy / 4095.0) * 2 - 1)
+    deep_copy = ((deep_copy / 4095.0) * 2 - 1)
     # Sample rate is determined by number of samples over duration
     sample_rate = len(deep_copy) / DURATION
 
     # Create File Name based on current time
     file_name = "{}.wav".format(time.time())
     # Write this data to output.wav
-    wavfile.write(file_name, int(sample_rate), deep_copy.astype(np.int16))
-
+    wavfile.write(file_name, int(sample_rate), deep_copy.astype(np.float32))
+    genre = audio_tools.classify_audio(file_name)
+    print("genre = " + str(genre))
     # TODO: Once wav file is created we should pass it to the classifier here. Should use threading for this
 
 data = []
@@ -56,5 +58,6 @@ while True:
             # Add the chunk that was just recorded
             data.append(chunk)
             # Have the helper create the wav file for the current recording
-            create_wav(data)
+            if len(data) >= 10: # need to wait for full 10 seconds
+                create_wav(data)
             break
