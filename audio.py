@@ -5,6 +5,7 @@ import time
 import audio_tools
 
 PORT = 'COM5'
+PORT2 = 'COM6'
 BAUD_RATE = 650000
 # Duration of individual sample in seconds
 INDIVIDUAL_SAMPLE_DURATION = 1
@@ -13,6 +14,11 @@ SAMPLE_QUEUE_SIZE = 10
 
 # Initialize Serial port for reading audio data
 ser = serial.Serial(PORT, BAUD_RATE)
+ser2 = serial.Serial(PORT2, BAUD_RATE)
+
+counter = 0
+WAIT_TIME = 5
+prev = 0
 
 def create_wav(data):
     DURATION = len(data)
@@ -30,7 +36,9 @@ def create_wav(data):
     # Write this data to output.wav
     wavfile.write(file_name, int(sample_rate), deep_copy.astype(np.float32))
     genre = audio_tools.classify_audio(file_name)
-    print("genre = " + str(genre))
+    tempo = audio_tools.tempo(file_name)
+    ser2.write(bytearray([genre]))
+    ser2.write(bytearray([tempo]))
     # TODO: Once wav file is created we should pass it to the classifier here. Should use threading for this
 
 data = []
@@ -52,12 +60,14 @@ while True:
         
         # Check if recording is over, if it is break out of loop
         if time.time() - start_time >= INDIVIDUAL_SAMPLE_DURATION:
+            counter += 1
             # If our recording queue is full, remove the oldest chunk
             if len(data) >=  SAMPLE_QUEUE_SIZE:
                 data.pop(0)
             # Add the chunk that was just recorded
             data.append(chunk)
             # Have the helper create the wav file for the current recording
-            if len(data) >= 10: # need to wait for full 10 seconds
+            if len(data) >= 10 and counter > prev + WAIT_TIME: # need to wait for full 10 seconds
                 create_wav(data)
+                prev = counter
             break
