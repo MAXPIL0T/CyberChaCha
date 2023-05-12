@@ -4,22 +4,24 @@ from scipy.io import wavfile
 import time
 import audio_tools
 
-PORT = 'COM5'
-PORT2 = 'COM6'
+PORT = 'COM5' # microphone
+PORT2 = 'COM6' # motors
 BAUD_RATE = 650000
 # Duration of individual sample in seconds
 INDIVIDUAL_SAMPLE_DURATION = 1
 # SAMPLE_QUEUE_SIZE * INDIVIDUAL_SAMPLE_DURATION = length in seconds
 SAMPLE_QUEUE_SIZE = 10
+WAIT_TIME = 5 # time in between each creation of a wav file
 
 # Initialize Serial port for reading audio data
 ser = serial.Serial(PORT, BAUD_RATE)
 ser2 = serial.Serial(PORT2, BAUD_RATE)
 
+# Counters
 counter = 0
-WAIT_TIME = 5
 prev = 0
 
+# Makes a wav file and sends genre and tempo to PORT2
 def create_wav(data):
     DURATION = len(data)
     # Flattens the data into a 1D array
@@ -32,9 +34,11 @@ def create_wav(data):
     sample_rate = len(deep_copy) / DURATION
 
     # Create File Name based on current time
-    file_name = "{}.wav".format(time.time())
+    file_name = "output/{}.wav".format(time.time())
     # Write this data to output.wav
     wavfile.write(file_name, int(sample_rate), deep_copy.astype(np.float32))
+
+    # Classify and send data
     genre = audio_tools.classify_audio(file_name)
     tempo = audio_tools.tempo(file_name)
     ser2.write(bytearray([genre]))
@@ -67,7 +71,7 @@ while True:
             # Add the chunk that was just recorded
             data.append(chunk)
             # Have the helper create the wav file for the current recording
-            if len(data) >= 10 and counter > prev + WAIT_TIME: # need to wait for full 10 seconds
+            if len(data) >= 10 and counter > prev + WAIT_TIME: # need to wait for full 10 seconds and send every 5 seconds
                 create_wav(data)
                 prev = counter
             break
