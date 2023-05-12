@@ -1,7 +1,6 @@
 # Classify audio as a specific genre using KNN algorithm on GTZAN dataset
 import extract_features
 import bpm_detection
-import librosa
 import json
 import util
 

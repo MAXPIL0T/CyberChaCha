@@ -5,11 +5,8 @@ import os
 import pickle
 import util
 import numpy as np
-import speechpy
-import audio_tools
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 
