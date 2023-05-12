@@ -78,7 +78,25 @@ void arabesque(double speed)
   delay(speed);
 }
   // 3: country
-
+void watermelonCrawl(double speed) {
+  // left leg out a bit
+  // left leg fully kick out
+  // bring left leg back in
+  // right leg out a bit
+  // right leg fully kick out
+  // bring right leg back in
+  // "clap" hands
+}
+void cowboyShuffle(double speed) {
+  // clap
+  // sway left then right
+  // clap
+  // sway right then left
+}
+void tushPush(double speed) {
+  // move arms to put hands on hips
+  // sway side to side in a groovy country way
+}
   // 4: disco
 void ymca(double speed){
   // both arms out at 45 degrees outstretched and two legs straight down
@@ -140,6 +158,11 @@ void runningMan(double speed)
   // delay(speed);
 }
   // 6: jazz
+void jazzKick(double speed) {
+  // arms sticking straight out to the audience
+  // right leg up at 90 degrees
+  // left leg up at 90 degrees
+}
   // 7: metal
 void bobHead(double speed) {
 
@@ -170,6 +193,21 @@ void floss(double speed) {
   // arms are straight, left arm is back and right arm is forward, alternate between these
 }
   // 9: reggae
+void flairy(double speed) {
+  // fling all arms and legs backwards
+  // fling all arms and legs forwards
+}
+void lebehLebeh(double speed) {
+  // sway body to one side
+  // on that side, raise arm and raise leg
+  // sway body to another side and do the same thing
+}
+void gennaBounce(double speed) {
+  // arms up and legs down
+  // arms go down, left leg up
+  // back to initial position
+  // arms go down, right leg up
+}
   // 10: rock
       // everything's the same as for metal
 //----------------------END Dance Moves-----------------------
@@ -177,13 +215,13 @@ void floss(double speed) {
 // all the dances
 DanceFunction bluesDances[] = {slowDrag, texasShuffle, savoyWalk}; // 1
 DanceFunction classicalDances[] = {pirouette, plie, abaresque}; // 2
-DanceFunction countryDances[] = {}; // 3
+DanceFunction countryDances[] = {watermelonCrawl, cowboyShuffle, tushPush}; // 3
 DanceFunction discoDances[] = {ymca, discoFinger, robot}; // 4
 DanceFunction hiphopDances[] = {wave, popChest, runningMan}; // 5
-DanceFunction jazzDances[] = {}; // 6
+DanceFunction jazzDances[] = {jazzKick, jazzKick, jazzKick}; // 6
 DanceFunction metalDances[] = {bobHead, pumpLegs, pumpArms}; // 7
 DanceFunction popDances[] = {dab, bodyRoll, floss}; // 8
-DanceFunction reggaeDances[] = {}; // 9
+DanceFunction reggaeDances[] = {flairy, lebehLebeh, gennaBounce}; // 9
 DanceFunction rockDances[] = {bobHead, pumpLegs, pumpArms}; // 10
 
 void loop()
