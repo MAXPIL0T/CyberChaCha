@@ -5,6 +5,7 @@ import os
 import pickle
 import util
 import numpy as np
+import speechpy
 import audio_tools
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
@@ -16,8 +17,7 @@ from sklearn.metrics import accuracy_score
 # Returns a matrix of mel frequency cepstral coefficients (13 rows, one for each coefficient vs columns for frames)
 def extract_mfcc(file_name):
     signal, sample_rate = librosa.load(file_name)
-    # truncate to 10 seconds
-    signal = signal[:int(10 * sample_rate)]
+    signal = signal[:int(10 * sample_rate)] # truncate to 10 seconds
     mfccs = librosa.feature.mfcc(signal, n_mfcc=13, sr=sample_rate)
     return mfccs
 
@@ -25,67 +25,44 @@ def extract_mfcc(file_name):
 def load_model():
     # load the normalized data and various relevant info
     loaded_data = []
-    with open("normalized_data.dat", "rb") as f:
+    with open("model.dat", "rb") as f:
         while True:
             try:
                 loaded_data.append(pickle.load(f))
             except EOFError:
                 break
-    features = np.array(loaded_data[0]) # all the features of every instance in the dataset
-    labels = np.array(loaded_data[1]) # corresponding labels
-    scaler = loaded_data[2] # used to normalize the dataset instances
-    min_length = loaded_data[3] # minimum length of the instances in the dataset (i.e min number of frames)
+    knn = loaded_data[0] # knn model used to classify, trained on GTANZ dataset
+    mean = loaded_data[1]
+    std_dev = loaded_data[2]
+    min_length = loaded_data[3]
 
-    # reshape into 2D array so we can use sklearn's knn
-    ninstances, coeff_num, frame_num = features.shape
-    reshaped_features = features.reshape((ninstances, coeff_num * frame_num))
-    casted_labels = labels.astype(int) # cast labels as int
-
-    # create the model using a custom comparison_metric (see below)
-    knn = KNeighborsClassifier(n_neighbors=28, metric=comparison_metric, metric_params={"dim_x": coeff_num, "dim_y": frame_num}, algorithm='brute')
-    knn.fit(reshaped_features, casted_labels) # train the model
-    return (knn, scaler, min_length)
-
-# Comparison metric used to calculate distance between two instance
-    # inst1 and inst2 are both arrays of vectors, where each vector is a frame
-    # each instance is then reshaped into dim_x by dim_y array (frame number by coefficients number)
-def comparison_metric(inst1, inst2, dim_x, dim_y):
-    # reshape the instances into 2D arrays
-    inst1 = util.reshape_1D_to_2D(inst1, dim_x, dim_y)
-    inst2 = util.reshape_1D_to_2D(inst2, dim_x, dim_y)
-    distances_between_each_coef = [np.linalg.norm(coef1 - coef2) for coef1, coef2 in zip(inst1, inst2)]
-    return np.average(distances_between_each_coef) # "distance" between two instances is the average distance between their frames
+    return knn, mean, std_dev, min_length
 
 # Trims and pads a given array of test instances to the specified length
-def preprocess_test_instance(test_features, length, scaler):
-    test_features = util.trim_arrays_to_length(test_features, length)
-    test_features = util.pad_arrays_with_zeros(test_features, length)
-    # test_features = np.array(test_features)
-    scaler, test_features = normalize_with_scaler(np.array(test_features), scaler)
-    # reshape
-    test_features = np.array(test_features)
+def preprocess_test_instance(test_features, mean, std_dev, min_length):
+    test_features = util.trim_arrays_to_length(test_features, min_length)
+    # test_features = util.pad_arrays_with_zeros(test_features, min_length)
+    test_features = normalize_with_vals(test_features, mean, std_dev) # original shape
     ninstances, coeff_num, frame_num = test_features.shape
     reshaped_test_features = test_features.reshape((ninstances, coeff_num * frame_num))
     return reshaped_test_features
 
 # ------------------------ NORMALIZATION AND LOADING DATA --------------------------
-# Normalizes data
+# Normalizes data (to zero mean and unit variance) and returns the mean and std deviation used to normalize the data
 def normalize(instances):
-    num_samples, num_mfccs, num_frames = instances.shape # get the shape
-    reshaped = instances.reshape((num_samples * num_mfccs, num_frames)) # reshape so we can use the scaler to normalize
-    scaler = StandardScaler()
-    scaler.fit(reshaped)
-    reshaped_transformed = scaler.transform(reshaped)
-    normalized = reshaped_transformed.reshape((num_samples, num_mfccs, num_frames)) # put the normalized data back into the right shape
-    return (scaler, normalized)
+    num_frames = len(instances[0][0])
+    reshaped = np.array(instances).reshape((len(instances), 13 * num_frames))
+    mean = np.mean(reshaped, axis=0)
+    std_dev = np.std(reshaped, axis=0)
+    return normalize_with_vals(instances, mean, std_dev), mean, std_dev # original shape
 
 # Normalizes data (also returns the scaler used on each frame in an array)
-def normalize_with_scaler(instance, scaler):
-    num_samples, num_mfccs, num_frames = instance.shape # get the shape
-    reshaped = instance.reshape((num_samples * num_mfccs, num_frames)) # reshape so we can use the scaler to normalize
-    reshaped_transformed = scaler.transform(reshaped)
-    normalized = reshaped_transformed.reshape((num_samples, num_mfccs, num_frames)) # put the normalized data back into the right shape
-    return (scaler, normalized)
+def normalize_with_vals(instances, mean, std_dev):
+    num_frames = len(instances[0][0])
+    reshaped = np.array(instances).reshape((len(instances), 13 * num_frames))
+    reshaped_normalized = (reshaped - mean) / std_dev
+    normalized = reshaped_normalized.reshape((len(instances), 13, num_frames)) # put it back in its original shape
+    return normalized # original shape
 
 # Transforms arr by using mean normalization with the given mean and std
 def transform(mean, std, arr):
@@ -100,24 +77,18 @@ def load_data():
                 loaded_data.append(pickle.load(f))
             except EOFError:
                 break
-    return {"mfcc": loaded_data[:-1], "classes": loaded_data[-1]}
+    return {"mfcc": loaded_data[0], "classes": loaded_data[1]}
 
 # ------------------------ OLD (USED WHEN WRITING THIS CODE) -------------------------- (not needed anymore but keep it just in case)
 # Computes the accuracy of the model
-def compute_accuracy(model):
-    dataset_path = "Data\genres_original"
-    right = 0
-    for label_index, (path, dirs, files) in enumerate(os.walk(dataset_path)): # for example, label_index = 1 for all files in the "blues" folder
-        for file_name in sorted(files):
-            if file_name.endswith(".wav"):
-                dir = file_name.split(".")[0]
-                try:
-                    prediction = audio_tools.classify_audio(os.path.join(dataset_path, dir, file_name))
-                    if prediction == label_index:
-                        right += 1
-                except:
-                    continue
-    return right / 1000
+def compute_accuracy():
+    model, mean, std_dev, min_length = load_model()
+    data = load_data()
+    features = data["mfcc"] # these are 10 second long mfccs
+    features = preprocess_test_instance(features, mean, std_dev, min_length) # reshaped
+    labels = data["classes"]
+    predictions = model.predict(features)
+    print(accuracy_score(labels, predictions))
         
 # Shuffles and splits data into training and test sets
 def split_data(data):
@@ -140,9 +111,10 @@ def preprocess(dataset_path):
                     mfcc = extract_mfcc(os.path.join(dataset_path, dir, file_name))
                     data["mfcc"].append(mfcc.tolist()) # add the frames as a list as the features
                     data["classes"].append(label_index)
-                    pickle.dump(mfcc.tolist(), f) # store the features
+                    # pickle.dump(mfcc.tolist(), f) # store the features
                 except:
                     continue
+    pickle.dump(data["mfcc"], f) # store the features
     pickle.dump(data["classes"], f) # store the classes
     return data
 
@@ -150,16 +122,26 @@ def preprocess(dataset_path):
 def preprocess_model():
     data = load_data() # raw mfccs and their classes
     min_length = util.get_min_length(data["mfcc"])
-    data["mfcc"] = util.trim_arrays_to_length(data["mfcc"], min_length)
     features = data["mfcc"]
     labels = data["classes"]
+    features = util.trim_arrays_to_length(features, min_length)
     # normalize the data
-    scaler, features = normalize(np.array(features)) # the scaler is used to normalize data
+    features, mean, std_dev = normalize(features) # the mean and std_dev are used to normalize data
 
-    f = open("normalized_data.dat", "wb")
-    pickle.dump(features, f)
-    pickle.dump(labels, f)
-    pickle.dump(scaler, f)
+    # reshape into 2D array so we can use sklearn's knn
+    ninstances, coeff_num, frame_num = features.shape
+    reshaped_features = features.reshape((ninstances, coeff_num * frame_num))
+    casted_labels = np.array(labels).astype(int) # cast labels as int
+
+    # create the model
+    knn = KNeighborsClassifier(n_neighbors=31, metric="minkowski", algorithm="brute")
+    knn.fit(reshaped_features, casted_labels) # train the model
+
+    # write data
+    f = open("model.dat", "wb")
+    pickle.dump(knn, f)
+    pickle.dump(mean, f)
+    pickle.dump(std_dev, f)
     pickle.dump(min_length, f)
 
 # Compute distance between two audio files given by the file paths

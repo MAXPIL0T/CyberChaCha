@@ -1,5 +1,10 @@
-import audio_tools
 import extract_features
+import util
+import numpy as np
+from speechpy.processing import cmvn
+import pickle
+import audio_tools
+from sklearn.metrics import accuracy_score
 
 if __name__ == '__main__':
-    print(audio_tools.classify_audio("Data\genres_original\metal\metal.00000.wav"))
+    extract_features.preprocess_model()
