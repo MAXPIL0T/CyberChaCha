@@ -1,6 +1,6 @@
 #include <ESP32Servo.h>
 #define BAUD_RATE 115200
-typedef void (*DanceFunction)(double tempo);
+typedef void (*DanceFunction)(double speed);
 
 Servo leftShoulder; // create servo object to control a servo
 Servo rightShoulder;
@@ -13,9 +13,9 @@ Servo rightKnee;
 Servo body;
 Servo head;
 
-int genre;
-int selection;
-double tempo;
+int genre = 1;
+int selection = 0;
+double delayTime = 500;
 
 // left upper arm add to move forward
 
@@ -234,12 +234,7 @@ void loop()
   //  arabesque(500);
   //  delay(1000);
 
-  if (Serial.available())
-  {
-    selection = random(0, 3);
-    genre = int(Serial.read());
-    delayTime = 1.0 / (int(Serial.read()) * (1 / 60000.0)); // milliseconds per beat
-    switch (genre)
+  switch (genre)
     {
     case 1: // blues
       bluesDances[selection](delayTime);
@@ -272,5 +267,11 @@ void loop()
       rockDances[selection](delayTime);
       break;
     }
+
+  if (Serial.available())
+  {
+    selection = random(0, 3);
+    genre = int(Serial.read());
+    delayTime = 1.0 / (int(Serial.read()) * (1 / 60000.0)); // milliseconds per beat
   }
 }
