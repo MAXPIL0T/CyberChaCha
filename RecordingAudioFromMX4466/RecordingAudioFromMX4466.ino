@@ -1,3 +1,4 @@
+// Records from microphone
 #define MIC_PORT 14
 
 void setup() {

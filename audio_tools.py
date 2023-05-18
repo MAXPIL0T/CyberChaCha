@@ -1,18 +1,18 @@
-# Classify audio as a specific genre using KNN algorithm on GTZAN dataset
-import extract_features
+# Classify audio as a specific genre using KNN algorithm
+import classification
 import bpm_detection
-import librosa
 import json
 import util
+import numpy as np
 
 # Returns the genre of the audio (given by the file path of the wav file)
 def classify_audio(file_path):
     # load model
-    model, scaler, min_length = extract_features.load_model()
+    model, mean, std_dev, min_length = classification.load_model()
     # process the given audio instance
-    mfccs = extract_features.extract_mfcc(file_path)
-    preprocessed_instance = extract_features.preprocess_test_instance([mfccs], min_length, scaler)
-    return model.predict(preprocessed_instance)[0]
+    mfccs = classification.extract_mfcc(file_path) # 10 second long mfcc
+    preprocessed_instance = classification.preprocess_test_instance([mfccs], mean, std_dev, min_length) # reshaped
+    return np.random.choice([model.predict(preprocessed_instance)[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], p=[0.5, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05])
 
 # Returns a random dance move based on the given genre / label
 def get_random_move(label):

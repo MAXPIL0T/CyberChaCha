@@ -1,12 +1,12 @@
 {
-    "1": ["slow_drag", "struttin", "texas_shuffle", "strut", "savoy_walk"],
-    "2": ["plie", "pirouette", "abrabesque", "fouette", "chasse"],
-    "3": ["tush_push", "watermelon_crawl", "achy_breaky_heart", "boot_scootin_boogie", "cowboy_shuffle"],
-    "4": ["lawnmower", "ymca", "funky_chicken", "disco_finger", "robot"],
-    "5": ["wave", "dougie", "pop_chest", "running_man", "cabbage_patch"],
-    "6": ["jazz_square", "chasse", "jazz_walk", "ball_change", "flying_charleston"],
-    "7": ["bob_head", "pump_arms"],
-    "8": ["dab", "moonwalk", "floss", "body_roll", "two_step"],
-    "9": ["flairy", "lebeh_lebeh", "fling_shoulder", "genna_bounce", "tip"],
-    "10": ["bob_head", "pump_arms"]
+    "1": ["slow_drag", "texas_shuffle", "savoy_walk"],
+    "2": ["plie", "pirouette", "abrabesque"],
+    "3": ["tush_push", "watermelon_crawl", "cowboy_shuffle"],
+    "4": ["ymca", "disco_finger", "robot"],
+    "5": ["wave", "pop_chest", "running_man"],
+    "6": ["jazzKick"],
+    "7": ["bob_head", "pump_arms", "pump_legs"],
+    "8": ["dab", "floss", "body_roll"],
+    "9": ["flairy", "lebeh_lebeh", "genna_bounce"],
+    "10": ["bob_head", "pump_arms", "pump_legs"]
 }

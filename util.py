@@ -27,34 +27,12 @@ def trim_arrays_to_length(arrays, length):
         for j in range(len(inst)):
             copy_arr[i][j] = arrays[i][j][0:length]
     return copy_arr
-    
-# returns an array with each entry being an array of all the values belonging to a particular frame
-    # ex. first entry of the returned array is an array of every value in frame 1 of every instance in data
-    # data is a 3D array: num_instances x frame_num x coeffs_num
-def get_flattened_frames(data):
-    num_frames = len(data[0])
-    frames = []
-    for i in range(num_frames):
-        frame_all = []
-        frame_all = frame_all + [inst[i] for inst in data] # get the values from the correct frame in each instance
-        frames.append(np.array(frame_all))
-    return frames
 
-# Pad every array inside arrays to the end_length with zeros
-def pad_arrays_with_zeros(arrays, end_length):
-    arr_copy = make_3d_with_length(len(arrays), end_length)
-    for i in range(len(arrays)):
-        instance = arrays[i]
-        for j in range(len(instance)):
-            coef_arr = instance[j]
-            if len(coef_arr) < end_length:
-                new_arr = np.concatenate((coef_arr, [0] * (end_length - len(coef_arr))), axis=0)
-                arr_copy[i][j] = new_arr
-    return arrays
-
+# Returns a random element from the given array
 def get_random_elem(arr):
     return np.random.choice(arr)
 
+# Makes a 3D array with 2nd dimension = 13 and 3rd dimension = length
 def make_3d_with_length(num_instances, length):
     arr = []
     for i in range(num_instances):
