@@ -28,25 +28,11 @@ def trim_arrays_to_length(arrays, length):
             copy_arr[i][j] = arrays[i][j][0:length]
     return copy_arr
 
-# SOMETHING WRONG WITH THIS
-# Pad every array inside arrays to the end_length with zeros
-# def pad_arrays_with_zeros(arrays, end_length):
-#     print(arrays)
-#     arr_copy = make_3d_with_length(len(arrays), end_length)
-#     for i in range(len(arrays)): # for each instance
-#         instance = arrays[i]
-#         for j in range(len(instance)):
-#             coef_arr = instance[j]
-#             if len(coef_arr) < end_length:
-#                 new_arr = np.concatenate((coef_arr, [0] * (end_length - len(coef_arr))), axis=0)
-#                 arr_copy[i][j] = new_arr
-#     print("arr_copy = ")
-#     print(arr_copy)
-#     return arr_copy
-
+# Returns a random element from the given array
 def get_random_elem(arr):
     return np.random.choice(arr)
 
+# Makes a 3D array with 2nd dimension = 13 and 3rd dimension = length
 def make_3d_with_length(num_instances, length):
     arr = []
     for i in range(num_instances):

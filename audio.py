@@ -1,3 +1,4 @@
+# Record audio in a circular queue from microphone (upload "RecordingAudioFromMX4466\RecordingAudioFromMX4466.ino" first)
 import serial
 import numpy as np
 from scipy.io import wavfile
@@ -21,6 +22,8 @@ ser2 = serial.Serial(PORT2, BAUD_RATE)
 counter = 0
 prev = 0
 
+genre_dict = {1: "blues", 2: "classical", 3: "country", 4: "disco", 5: "hiphop", 6: "jazz", 7: "metal", 8: "pop", 9: "reggae", 10: "rock"}
+
 # Makes a wav file and sends genre and tempo to PORT2
 def create_wav(data):
     DURATION = len(data)
@@ -42,8 +45,7 @@ def create_wav(data):
     genre = audio_tools.classify_audio(file_name)
     tempo = audio_tools.tempo(file_name)
     ser2.write(bytearray([genre]))
-    ser2.write(bytearray([tempo]))
-    # TODO: Once wav file is created we should pass it to the classifier here. Should use threading for this
+    ser2.write(bytearray([int(tempo)]))
 
 data = []
 while True:
