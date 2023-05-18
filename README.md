@@ -22,17 +22,16 @@ Upload "RecordingAudioFromMX4466\RecordingAudioFromMX4466.ino" to your arduino. 
 ```
 Upload "arduino_robot\arduino_robot.ino" to your arduino on a different port. Connect robot servos and lcd display to pins according to the pin numbers in setup(), or change accordingly.\
 ```python
-Serial.begin(BAUD_RATE);
-  leftShoulder.attach(<port number>);
-  rightShoulder.attach(<port number>);
-  rightElbow.attach(<port number>);
-  leftElbow.attach(<port number>);
-  leftLeg.attach(<port number>);
-  rightLeg.attach(<port number>);
-  leftKnee.attach(<port number>);
-  rightKnee.attach(<port number>);
-  body.attach(<port number>);
-  head.attach(<port number>);
+leftShoulder.attach(<port number>);
+rightShoulder.attach(<port number>);
+rightElbow.attach(<port number>);
+leftElbow.attach(<port number>);
+leftLeg.attach(<port number>);
+rightLeg.attach(<port number>);
+leftKnee.attach(<port number>);
+rightKnee.attach(<port number>);
+body.attach(<port number>);
+head.attach(<port number>);
 ```
 In "audio.py" make sure to change your ports to the correct ones (PORT and PORT2 variables)\
 ```python
