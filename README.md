@@ -16,11 +16,11 @@ Dataset: [GTZAN Audio Dataset](https://www.kaggle.com/datasets/andradaolteanu/gt
     - scikit-learn
 
 ## Usage
-Upload "RecordingAudioFromMX4466\RecordingAudioFromMX4466.ino" to your arduino. Connect MX4466 microphone to pin 14 (or change the pin number in RecordingAudioFromMX4466\RecordingAudioFromMX4466.ino)\
+Upload "RecordingAudioFromMX4466\RecordingAudioFromMX4466.ino" to your arduino. Connect MX4466 microphone to pin 14 (or change the pin number in RecordingAudioFromMX4466\RecordingAudioFromMX4466.ino)
 ```python
 #define MIC_PORT <your port number>
 ```
-Upload "arduino_robot\arduino_robot.ino" to your arduino on a different port. Connect robot servos and lcd display to pins according to the pin numbers in setup(), or change accordingly.\
+Upload "arduino_robot\arduino_robot.ino" to your arduino on a different port. Connect robot servos and lcd display to pins according to the pin numbers in setup(), or change accordingly.
 ```python
 leftShoulder.attach(<port number>);
 rightShoulder.attach(<port number>);
@@ -33,7 +33,7 @@ rightKnee.attach(<port number>);
 body.attach(<port number>);
 head.attach(<port number>);
 ```
-In "audio.py" make sure to change your ports to the correct ones (PORT and PORT2 variables)\
+In "audio.py" make sure to change your ports to the correct ones (PORT and PORT2 variables)
 ```python
 PORT = '<your port>' # microphone
 PORT2 = '<your other port>' # motors
